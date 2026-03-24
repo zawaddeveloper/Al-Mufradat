@@ -2,13 +2,17 @@ import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { Trophy, Flame, Target, ArrowRight, BookOpen, Brain } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Language, translations } from '../translations';
 
 interface HomeProps {
   user: UserProfile | null;
   isDarkMode: boolean;
+  language: Language;
 }
 
-export default function Home({ user, isDarkMode }: HomeProps) {
+export default function Home({ user, isDarkMode, language }: HomeProps) {
+  const t = translations[language];
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -26,6 +30,12 @@ export default function Home({ user, isDarkMode }: HomeProps) {
     visible: { opacity: 1, y: 0 }
   };
 
+  const getGreeting = () => {
+    if (!user) return t.heroTitle;
+    const name = user.displayName?.split(' ')[0];
+    return `${t.assalamuAlaikum}, ${name}!`;
+  };
+
   return (
     <motion.div
       variants={containerVariants}
@@ -37,24 +47,24 @@ export default function Home({ user, isDarkMode }: HomeProps) {
       <section className="relative overflow-hidden rounded-3xl bg-emerald-600 p-8 md:p-12 text-white shadow-2xl shadow-emerald-600/20">
         <div className="relative z-10 max-w-2xl">
           <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl font-bold mb-4">
-            {user ? `Assalamu Alaikum, ${user.displayName?.split(' ')[0]}!` : 'Master Quranic Vocabulary'}
+            {getGreeting()}
           </motion.h1>
           <motion.p variants={itemVariants} className="text-emerald-50 text-lg mb-8">
-            Learn the most common words in the Quran through interactive lessons and adaptive quizzes.
+            {t.heroSubtitle}
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
             <Link
               to="/learn"
               className="px-6 py-3 bg-white text-emerald-600 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-50 transition-colors"
             >
-              Start Learning <ArrowRight size={20} />
+              {t.startLearning} <ArrowRight size={20} />
             </Link>
             {!user && (
               <Link
                 to="/login"
                 className="px-6 py-3 bg-emerald-700/50 text-white rounded-xl font-bold border border-emerald-400/30 hover:bg-emerald-700/70 transition-colors"
               >
-                Create Account
+                {t.createAccount}
               </Link>
             )}
           </motion.div>
@@ -76,8 +86,8 @@ export default function Home({ user, isDarkMode }: HomeProps) {
                 <Flame size={24} />
               </div>
               <div>
-                <p className="text-sm text-stone-500 font-medium">Daily Streak</p>
-                <p className="text-2xl font-bold">{user.streak} Days</p>
+                <p className="text-sm text-stone-500 font-medium">{t.streak}</p>
+                <p className="text-2xl font-bold">{user.streak} {t.days}</p>
               </div>
             </div>
           </motion.div>
@@ -91,8 +101,8 @@ export default function Home({ user, isDarkMode }: HomeProps) {
                 <Trophy size={24} />
               </div>
               <div>
-                <p className="text-sm text-stone-500 font-medium">Total Points</p>
-                <p className="text-2xl font-bold">{user.points} XP</p>
+                <p className="text-sm text-stone-500 font-medium">{t.totalPoints}</p>
+                <p className="text-2xl font-bold">{user.points} {t.points.toUpperCase()}</p>
               </div>
             </div>
           </motion.div>
@@ -106,8 +116,8 @@ export default function Home({ user, isDarkMode }: HomeProps) {
                 <Target size={24} />
               </div>
               <div>
-                <p className="text-sm text-stone-500 font-medium">Daily Goal</p>
-                <p className="text-2xl font-bold">{user.dailyGoal} Words</p>
+                <p className="text-sm text-stone-500 font-medium">{t.dailyGoal}</p>
+                <p className="text-2xl font-bold">{user.dailyGoal} {t.words}</p>
               </div>
             </div>
           </motion.div>
@@ -123,13 +133,13 @@ export default function Home({ user, isDarkMode }: HomeProps) {
           <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <BookOpen size={28} />
           </div>
-          <h3 className="text-2xl font-bold mb-2">Continue Learning</h3>
-          <p className="text-stone-500 mb-6">Explore new words and their meanings in Arabic, English, and Bangla.</p>
+          <h3 className="text-2xl font-bold mb-2">{t.continueLearning}</h3>
+          <p className="text-stone-500 mb-6">{t.exploreNewWords}</p>
           <Link
             to="/learn"
             className="inline-flex items-center gap-2 text-emerald-600 font-bold hover:gap-3 transition-all"
           >
-            Go to Lessons <ArrowRight size={18} />
+            {t.goToLessons} <ArrowRight size={18} />
           </Link>
         </motion.div>
 
@@ -140,13 +150,13 @@ export default function Home({ user, isDarkMode }: HomeProps) {
           <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <Brain size={28} />
           </div>
-          <h3 className="text-2xl font-bold mb-2">Take a Quiz</h3>
-          <p className="text-stone-500 mb-6">Test your knowledge with adaptive quizzes and earn points for your progress.</p>
+          <h3 className="text-2xl font-bold mb-2">{t.quizTitle}</h3>
+          <p className="text-stone-500 mb-6">{t.quizSubtitle}</p>
           <Link
             to="/quiz"
             className="inline-flex items-center gap-2 text-blue-600 font-bold hover:gap-3 transition-all"
           >
-            Start Quiz <ArrowRight size={18} />
+            {t.startQuiz} <ArrowRight size={18} />
           </Link>
         </motion.div>
       </div>

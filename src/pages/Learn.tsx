@@ -7,6 +7,7 @@ import { Search, Filter, BookOpen, CheckCircle, Brain, ChevronLeft, ChevronRight
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Language, translations } from '../translations';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,9 +16,11 @@ function cn(...inputs: ClassValue[]) {
 interface LearnProps {
   user: UserProfile | null;
   isDarkMode: boolean;
+  language: Language;
 }
 
-export default function Learn({ user, isDarkMode }: LearnProps) {
+export default function Learn({ user, isDarkMode, language }: LearnProps) {
+  const t = translations[language];
   const [words, setWords] = useState<Word[]>([]);
   const [progress, setProgress] = useState<Record<string, UserProgress>>({});
   const [loading, setLoading] = useState(true);
@@ -68,7 +71,7 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
           ...prev,
           [wordId]: { userId: user.uid, wordId, status: 'learned' }
         }));
-        toast.success('Word marked as learned! +10 XP');
+        toast.success(t.wordMarkedLearned);
       }
     } else {
       // Guest mode
@@ -78,7 +81,7 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
       };
       setProgress(newProgress);
       localStorage.setItem('guest_progress', JSON.stringify(newProgress));
-      toast.success('Word marked as learned! (Guest Mode)');
+      toast.success(t.wordMarkedGuest);
     }
   };
 
@@ -98,7 +101,7 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
-        <p className="text-stone-500 font-medium">Loading words...</p>
+        <p className="text-stone-500 font-medium">{t.loading}</p>
       </div>
     );
   }
@@ -111,7 +114,7 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
           <input
             type="text"
-            placeholder="Search Arabic, English, or Bangla..."
+            placeholder={t.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -139,7 +142,9 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
                   : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
               )}
             >
-              {f}
+              {f === 'all' ? t.all : 
+               f === 'learned' ? t.wordsLearned : 
+               t.unlearned}
             </button>
           ))}
         </div>
@@ -177,8 +182,8 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
             <div className="w-20 h-20 bg-stone-100 dark:bg-stone-800 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search size={32} className="text-stone-400" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">No words found</h3>
-            <p className="text-stone-500">Try adjusting your search or filter settings.</p>
+            <h3 className="text-2xl font-bold mb-2">{t.noWordsFound}</h3>
+            <p className="text-stone-500">{t.adjustSearch}</p>
           </motion.div>
         ) : viewMode === 'card' ? (
           <div className="relative">
@@ -190,9 +195,10 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
               onNext={nextWord}
               onPrev={prevWord}
               showNavigation={filteredWords.length > 1}
+              language={language}
             />
             <div className="text-center mt-6 text-stone-500 font-medium">
-              Word {currentIndex + 1} of {filteredWords.length}
+              {t.wordCounter} {currentIndex + 1} {t.of} {filteredWords.length}
             </div>
           </div>
         ) : (
@@ -214,11 +220,27 @@ export default function Learn({ user, isDarkMode }: LearnProps) {
                 }}
               >
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-3xl font-bold text-emerald-600 font-arabic" dir="rtl">{word.arabic}</h3>
-                  {progress[word.id] && <CheckCircle size={20} className="text-emerald-500" />}
+                  <div className="text-right">
+                    <h3 className="text-3xl font-bold text-emerald-600 font-arabic mb-2" dir="rtl">{word.arabic}</h3>
+                    {word.type && (
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                        word.type === 'noun' ? "bg-blue-100 text-blue-700" : 
+                        word.type === 'verb' ? "bg-orange-100 text-orange-700" : 
+                        "bg-purple-100 text-purple-700"
+                      )}>
+                        {word.type === 'noun' ? t.noun : word.type === 'verb' ? t.verb : t.preposition}
+                      </span>
+                    )}
+                  </div>
+                  {progress[word.id] && <CheckCircle size={20} className="text-emerald-500 mt-2" />}
                 </div>
-                <p className="text-lg font-bold mb-1">{word.english}</p>
-                <p className="text-stone-500 font-medium font-bengali">{word.bangla}</p>
+                <p className={cn(
+                  "text-lg font-bold",
+                  language === 'bn' ? "font-bengali" : ""
+                )}>
+                  {language === 'en' ? word.english : word.bangla}
+                </p>
               </motion.div>
             ))}
           </div>

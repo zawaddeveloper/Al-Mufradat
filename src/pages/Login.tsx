@@ -5,6 +5,7 @@ import { auth, googleProvider } from '../firebase';
 import { motion } from 'motion/react';
 import { LogIn, UserPlus, Mail, Lock, Chrome, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { translations, Language } from '../translations';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -14,9 +15,11 @@ function cn(...inputs: ClassValue[]) {
 
 interface LoginProps {
   isDarkMode: boolean;
+  language: Language;
 }
 
-export default function Login({ isDarkMode }: LoginProps) {
+export default function Login({ isDarkMode, language }: LoginProps) {
+  const t = translations[language];
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,11 +30,11 @@ export default function Login({ isDarkMode }: LoginProps) {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success('Successfully logged in with Google!');
+      toast.success(t.googleLoginSuccess);
       navigate('/');
     } catch (error) {
       console.error('Google Login Error:', error);
-      toast.error('Failed to login with Google.');
+      toast.error(t.googleLoginFailed);
     } finally {
       setLoading(false);
     }
@@ -43,15 +46,15 @@ export default function Login({ isDarkMode }: LoginProps) {
     try {
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, password);
-        toast.success('Account created successfully!');
+        toast.success(t.accountCreated);
       } else {
         await signInWithEmailAndPassword(auth, email, password);
-        toast.success('Welcome back!');
+        toast.success(t.welcomeBackToast);
       }
       navigate('/');
     } catch (error: any) {
       console.error('Email Auth Error:', error);
-      toast.error(error.message || 'Authentication failed.');
+      toast.error(error.message || t.error);
     } finally {
       setLoading(false);
     }
@@ -71,13 +74,13 @@ export default function Login({ isDarkMode }: LoginProps) {
           <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
             {isRegistering ? <UserPlus size={32} /> : <LogIn size={32} />}
           </div>
-          <h2 className="text-3xl font-bold mb-2">{isRegistering ? 'Create Account' : 'Welcome Back'}</h2>
-          <p className="text-stone-500">Master Quranic vocabulary with ease.</p>
+          <h2 className="text-3xl font-bold mb-2">{isRegistering ? t.signUp : t.welcomeBack}</h2>
+          <p className="text-stone-500">{t.masterQuranic}</p>
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-6 mb-8">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-stone-400 uppercase tracking-widest">Email Address</label>
+            <label className="text-sm font-bold text-stone-400 uppercase tracking-widest">{t.emailAddress}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
               <input
@@ -95,7 +98,7 @@ export default function Login({ isDarkMode }: LoginProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-stone-400 uppercase tracking-widest">Password</label>
+            <label className="text-sm font-bold text-stone-400 uppercase tracking-widest">{t.password}</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
               <input
@@ -117,7 +120,7 @@ export default function Login({ isDarkMode }: LoginProps) {
             disabled={loading}
             className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
           >
-            {loading ? <Loader2 className="animate-spin" size={20} /> : (isRegistering ? 'Sign Up' : 'Sign In')}
+            {loading ? <Loader2 className="animate-spin" size={20} /> : (isRegistering ? t.signUp : t.signIn)}
             {!loading && <ArrowRight size={20} />}
           </button>
         </form>
@@ -127,7 +130,7 @@ export default function Login({ isDarkMode }: LoginProps) {
             <div className="w-full border-t border-stone-200 dark:border-stone-700"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className={cn("px-4 font-medium text-stone-400", isDarkMode ? "bg-stone-800" : "bg-white")}>Or continue with</span>
+            <span className={cn("px-4 font-medium text-stone-400", isDarkMode ? "bg-stone-800" : "bg-white")}>{t.orContinueWith}</span>
           </div>
         </div>
 
@@ -144,12 +147,12 @@ export default function Login({ isDarkMode }: LoginProps) {
         </button>
 
         <p className="mt-8 text-center text-stone-500">
-          {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
+          {isRegistering ? t.alreadyHaveAccount : t.dontHaveAccount}{' '}
           <button
             onClick={() => setIsRegistering(!isRegistering)}
             className="text-emerald-600 font-bold hover:underline"
           >
-            {isRegistering ? 'Sign In' : 'Sign Up'}
+            {isRegistering ? t.signIn : t.signUp}
           </button>
         </p>
       </motion.div>

@@ -6,6 +6,7 @@ import { Brain, Trophy, ArrowRight, CheckCircle, XCircle, Loader2, RefreshCw } f
 import { toast } from 'sonner';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Language, translations } from '../translations';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,6 +15,7 @@ function cn(...inputs: ClassValue[]) {
 interface QuizProps {
   user: UserProfile | null;
   isDarkMode: boolean;
+  language: Language;
 }
 
 interface Question {
@@ -21,10 +23,11 @@ interface Question {
   word: Word;
   options: string[];
   correctAnswer: string;
-  type: 'arabic-to-english' | 'english-to-arabic' | 'arabic-to-bangla';
+  type: 'arabic-to-english' | 'english-to-arabic' | 'arabic-to-bangla' | 'bangla-to-arabic';
 }
 
-export default function Quiz({ user, isDarkMode }: QuizProps) {
+export default function Quiz({ user, isDarkMode, language }: QuizProps) {
+  const t = translations[language];
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -52,7 +55,13 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
     const selectedWords = shuffled.slice(0, 10);
     
     const newQuestions: Question[] = selectedWords.map(word => {
-      const type = diff === 'easy' ? 'arabic-to-english' : diff === 'medium' ? 'arabic-to-bangla' : 'english-to-arabic';
+      let type: Question['type'];
+      
+      if (language === 'bn') {
+        type = diff === 'hard' ? 'bangla-to-arabic' : 'arabic-to-bangla';
+      } else {
+        type = diff === 'hard' ? 'english-to-arabic' : 'arabic-to-english';
+      }
       
       let correctAnswer = '';
       let options: string[] = [];
@@ -63,7 +72,10 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
       } else if (type === 'arabic-to-bangla') {
         correctAnswer = word.bangla;
         options = [correctAnswer, ...shuffled.filter(w => w.id !== word.id).slice(0, 3).map(w => w.bangla)];
-      } else {
+      } else if (type === 'english-to-arabic') {
+        correctAnswer = word.arabic;
+        options = [correctAnswer, ...shuffled.filter(w => w.id !== word.id).slice(0, 3).map(w => w.arabic)];
+      } else if (type === 'bangla-to-arabic') {
         correctAnswer = word.arabic;
         options = [correctAnswer, ...shuffled.filter(w => w.id !== word.id).slice(0, 3).map(w => w.arabic)];
       }
@@ -92,9 +104,9 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
     setIsAnswered(true);
     if (option === questions[currentQuestionIdx].correctAnswer) {
       setScore(prev => prev + 1);
-      toast.success('Correct!');
+      toast.success(t.correct);
     } else {
-      toast.error(`Incorrect! The answer was ${questions[currentQuestionIdx].correctAnswer}`);
+      toast.error(`${t.incorrectAnswer} ${questions[currentQuestionIdx].correctAnswer}`);
     }
   };
 
@@ -115,7 +127,7 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
-        <p className="text-stone-500 font-medium">Preparing quiz...</p>
+        <p className="text-stone-500 font-medium">{t.preparingQuiz}</p>
       </div>
     );
   }
@@ -133,8 +145,8 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
         <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-8">
           <Brain size={40} />
         </div>
-        <h2 className="text-3xl font-bold mb-4">Ready for a Quiz?</h2>
-        <p className="text-stone-500 mb-10 text-lg">Test your knowledge of the most common Quranic words and earn XP points.</p>
+        <h2 className="text-3xl font-bold mb-4">{t.readyForQuiz}</h2>
+        <p className="text-stone-500 mb-10 text-lg">{t.testKnowledge}</p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           {(['easy', 'medium', 'hard'] as const).map((d) => (
@@ -148,7 +160,9 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
                   : isDarkMode ? "border-stone-700 hover:bg-stone-700" : "border-stone-200 hover:bg-stone-50"
               )}
             >
-              {d}
+              {d === 'easy' ? t.easy : 
+               d === 'medium' ? t.medium : 
+               t.hard}
             </button>
           ))}
         </div>
@@ -157,7 +171,7 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
           onClick={() => generateQuiz(difficulty)}
           className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
         >
-          Start Quiz Now
+          {t.startQuiz}
         </button>
       </motion.div>
     );
@@ -177,16 +191,16 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
         <div className="w-24 h-24 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-yellow-50">
           <Trophy size={48} />
         </div>
-        <h2 className="text-4xl font-bold mb-2">Quiz Completed!</h2>
-        <p className="text-stone-500 mb-8 text-lg">Great job! You've earned some valuable XP.</p>
+        <h2 className="text-4xl font-bold mb-2">{t.quizCompleted}</h2>
+        <p className="text-stone-500 mb-8 text-lg">{t.wellDone}</p>
         
         <div className="grid grid-cols-2 gap-6 mb-10">
           <div className={cn("p-6 rounded-2xl border", isDarkMode ? "bg-stone-900/50 border-stone-700" : "bg-stone-50 border-stone-100")}>
-            <p className="text-stone-400 text-sm font-bold uppercase tracking-wider mb-1">Score</p>
+            <p className="text-stone-400 text-sm font-bold uppercase tracking-wider mb-1">{t.score}</p>
             <p className="text-4xl font-bold text-emerald-600">{score} / {questions.length}</p>
           </div>
           <div className={cn("p-6 rounded-2xl border", isDarkMode ? "bg-stone-900/50 border-stone-700" : "bg-stone-50 border-stone-100")}>
-            <p className="text-stone-400 text-sm font-bold uppercase tracking-wider mb-1">Accuracy</p>
+            <p className="text-stone-400 text-sm font-bold uppercase tracking-wider mb-1">{t.accuracy}</p>
             <p className="text-4xl font-bold text-blue-600">{percentage}%</p>
           </div>
         </div>
@@ -196,14 +210,14 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
             onClick={() => setQuizStarted(false)}
             className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
           >
-            Try Another Quiz
+            {t.tryAgain}
           </button>
           <button
             onClick={() => generateQuiz(difficulty)}
             className={cn("flex-1 py-4 rounded-xl font-bold border transition-all flex items-center justify-center gap-2", isDarkMode ? "border-stone-700 hover:bg-stone-700" : "border-stone-200 hover:bg-stone-50")}
           >
             <RefreshCw size={20} />
-            Retake This Quiz
+            {t.retakeQuiz}
           </button>
         </div>
       </motion.div>
@@ -217,8 +231,8 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-bold text-stone-400 uppercase tracking-widest">Question {currentQuestionIdx + 1} of {questions.length}</span>
-          <span className="text-sm font-bold text-emerald-600">{score} Points</span>
+          <span className="text-sm font-bold text-stone-400 uppercase tracking-widest">{t.questionCounter} {currentQuestionIdx + 1} {t.of} {questions.length}</span>
+          <span className="text-sm font-bold text-emerald-600">{score} {t.points}</span>
         </div>
         <div className="h-2 w-full bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
           <motion.div
@@ -243,8 +257,8 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
           <div className="text-center mb-12">
             <p className="text-stone-400 text-sm font-bold uppercase tracking-widest mb-4">
               {currentQuestion.type === 'arabic-to-english' || currentQuestion.type === 'arabic-to-bangla' 
-                ? 'What is the meaning of this word?' 
-                : 'Which Arabic word means this?'}
+                ? t.whatIsMeaning 
+                : t.whichArabicWord}
             </p>
             <h2 className={cn(
               "text-6xl md:text-7xl font-bold mb-4",
@@ -252,7 +266,9 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
                 ? "text-emerald-600 font-arabic" 
                 : "text-stone-900 dark:text-white"
             )} dir={currentQuestion.type.startsWith('arabic') ? 'rtl' : 'ltr'}>
-              {currentQuestion.type.startsWith('arabic') ? currentQuestion.word.arabic : currentQuestion.word.english}
+              {currentQuestion.type.startsWith('arabic') 
+                ? currentQuestion.word.arabic 
+                : (language === 'en' ? currentQuestion.word.english : currentQuestion.word.bangla)}
             </h2>
           </div>
 
@@ -274,7 +290,9 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
                     isAnswered && !isSelected && !isCorrect && "opacity-50 grayscale border-stone-100 dark:border-stone-700"
                   )}
                 >
-                  <span className={cn(currentQuestion.type === 'english-to-arabic' && "font-arabic text-2xl")} dir={currentQuestion.type === 'english-to-arabic' ? 'rtl' : 'ltr'}>
+                  <span className={cn(
+                    (currentQuestion.type === 'english-to-arabic' || currentQuestion.type === 'bangla-to-arabic') && "font-arabic text-2xl"
+                  )} dir={(currentQuestion.type === 'english-to-arabic' || currentQuestion.type === 'bangla-to-arabic') ? 'rtl' : 'ltr'}>
                     {option}
                   </span>
                   {isAnswered && isCorrect && <CheckCircle size={24} className="text-emerald-500" />}
@@ -291,7 +309,7 @@ export default function Quiz({ user, isDarkMode }: QuizProps) {
               onClick={nextQuestion}
               className="w-full py-4 bg-stone-900 dark:bg-emerald-600 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-stone-800 dark:hover:bg-emerald-700 transition-all active:scale-95"
             >
-              {currentQuestionIdx === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+              {currentQuestionIdx === questions.length - 1 ? t.finish : t.next}
               <ArrowRight size={20} />
             </motion.button>
           )}

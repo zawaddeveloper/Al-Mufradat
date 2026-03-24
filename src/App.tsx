@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { UserProfile } from './types';
-import { Book, LayoutDashboard, BrainCircuit, User, LogIn, LogOut, Moon, Sun, Search, Bookmark, Trophy } from 'lucide-react';
+import { Book, LayoutDashboard, BrainCircuit, User, LogIn, LogOut, Moon, Sun, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Home from './pages/Home';
 import Learn from './pages/Learn';
@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Language, translations } from './translations';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,8 +23,18 @@ export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved as Language) || 'en';
+  });
   const navigate = useNavigate();
   const location = useLocation();
+
+  const t = translations[language];
+
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -60,6 +71,10 @@ export default function App() {
     navigate('/login');
   };
 
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'bn' : 'en');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
@@ -73,10 +88,10 @@ export default function App() {
   }
 
   const navItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/learn', icon: Book, label: 'Learn' },
-    { path: '/quiz', icon: BrainCircuit, label: 'Quiz' },
-    { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/', icon: LayoutDashboard, label: t.home },
+    { path: '/learn', icon: Book, label: t.learn },
+    { path: '/quiz', icon: BrainCircuit, label: t.quiz },
+    { path: '/profile', icon: User, label: t.profile },
   ];
 
   return (
@@ -88,10 +103,19 @@ export default function App() {
             <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/20 group-hover:scale-105 transition-transform">
               <Book size={24} />
             </div>
-            <span className="font-bold text-xl tracking-tight">Al-Mufradat</span>
+            <span className="font-bold text-xl tracking-tight">{t.appName}</span>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            <button
+              onClick={toggleLanguage}
+              className={cn("flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors", isDarkMode ? "bg-stone-800 hover:bg-stone-700 text-stone-300" : "bg-stone-100 hover:bg-stone-200 text-stone-600")}
+              title={t.selectLanguage}
+            >
+              <Languages size={16} />
+              <span className="hidden sm:inline">{language === 'en' ? 'BN' : 'EN'}</span>
+            </button>
+
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={cn("p-2 rounded-full transition-colors", isDarkMode ? "hover:bg-stone-800" : "hover:bg-stone-100")}
@@ -103,12 +127,12 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex flex-col items-end">
                   <span className="text-sm font-medium">{user.displayName}</span>
-                  <span className="text-xs text-emerald-600 font-semibold">{user.points} pts</span>
+                  <span className="text-xs text-emerald-600 font-semibold">{user.points} {t.points}</span>
                 </div>
                 <button
                   onClick={handleLogout}
                   className="p-2 text-stone-500 hover:text-red-500 transition-colors"
-                  title="Logout"
+                  title={t.logout}
                 >
                   <LogOut size={20} />
                 </button>
@@ -119,7 +143,7 @@ export default function App() {
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"
               >
                 <LogIn size={18} />
-                <span className="font-medium">Login</span>
+                <span className="font-medium hidden sm:inline">{t.login}</span>
               </Link>
             )}
           </div>
@@ -130,11 +154,11 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8 flex-grow">
         <AnimatePresence mode="wait">
           <Routes>
-            <Route path="/" element={<Home user={user} isDarkMode={isDarkMode} />} />
-            <Route path="/learn" element={<Learn user={user} isDarkMode={isDarkMode} />} />
-            <Route path="/quiz" element={<Quiz user={user} isDarkMode={isDarkMode} />} />
-            <Route path="/profile" element={<Profile user={user} isDarkMode={isDarkMode} />} />
-            <Route path="/login" element={<Login isDarkMode={isDarkMode} />} />
+            <Route path="/" element={<Home user={user} isDarkMode={isDarkMode} language={language} />} />
+            <Route path="/learn" element={<Learn user={user} isDarkMode={isDarkMode} language={language} />} />
+            <Route path="/quiz" element={<Quiz user={user} isDarkMode={isDarkMode} language={language} />} />
+            <Route path="/profile" element={<Profile user={user} isDarkMode={isDarkMode} language={language} />} />
+            <Route path="/login" element={<Login isDarkMode={isDarkMode} language={language} />} />
           </Routes>
         </AnimatePresence>
       </main>
@@ -143,9 +167,9 @@ export default function App() {
       <footer className={cn("py-8 border-t text-center mt-auto mb-20 md:mb-0", isDarkMode ? "bg-stone-900 border-stone-800 text-stone-500" : "bg-white border-stone-200 text-stone-400")}>
         <div className="max-w-7xl mx-auto px-4">
           <p className="text-sm font-medium">
-            Design & Developed by <span className="text-emerald-600 font-bold">Mirpur DOHS Dawah Circle</span>
+            {t.footerText}
           </p>
-          <p className="text-[10px] mt-1 uppercase tracking-widest font-bold">© {new Date().getFullYear()} Al-Mufradat</p>
+          <p className="text-[10px] mt-1 uppercase tracking-widest font-bold">© {new Date().getFullYear()} {t.appName}</p>
         </div>
       </footer>
 
