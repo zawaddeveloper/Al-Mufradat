@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user progress and gamification data.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "streak": { "type": "integer" },
+        "points": { "type": "integer" },
+        "level": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "dailyGoal": { "type": "integer" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Word": {
+      "title": "Quranic Word",
+      "description": "Represents a single Quranic Arabic word with meanings and examples.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "arabic": { "type": "string" },
+        "english": { "type": "string" },
+        "bangla": { "type": "string" },
+        "exampleArabic": { "type": "string" },
+        "exampleEnglish": { "type": "string" },
+        "exampleBangla": { "type": "string" },
+        "transliteration": { "type": "string" },
+        "frequency": { "type": "integer" }
+      },
+      "required": ["id", "arabic", "english", "bangla"]
+    },
+    "UserProgress": {
+      "title": "User Word Progress",
+      "description": "Tracks the learning status of a specific word for a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "wordId": { "type": "string" },
+        "status": { "type": "string", "enum": ["learned", "learning", "review"] },
+        "lastReviewed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "wordId", "status"]
+    },
+    "QuizResult": {
+      "title": "Quiz Result",
+      "description": "Stores the outcome of a user's quiz session.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "score": { "type": "integer" },
+        "totalQuestions": { "type": "integer" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "score", "totalQuestions", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents."
+    },
+    "/words/{wordId}": {
+      "schema": "Word",
+      "description": "Collection of Quranic words."
+    },
+    "/progress/{progressId}": {
+      "schema": "UserProgress",
+      "description": "User progress tracking. Document ID can be userId_wordId."
+    },
+    "/quizResults/{resultId}": {
+      "schema": "QuizResult",
+      "description": "History of quiz attempts."
+    }
+  }
+}
