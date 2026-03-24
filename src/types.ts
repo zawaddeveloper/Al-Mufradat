@@ -8,6 +8,8 @@ export interface Word {
   exampleBangla?: string;
   transliteration?: string;
   frequency?: number;
+  type?: 'noun' | 'verb' | 'preposition';
+  highlightWord?: string;
 }
 
 export interface UserProfile {
